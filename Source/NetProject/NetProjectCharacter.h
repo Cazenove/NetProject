@@ -4,10 +4,13 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+//技能库
+#include "AbilitySystemInterface.h"
+#include "AbilitySystemComponent.h"
 #include "NetProjectCharacter.generated.h"
 
 UCLASS(config=Game)
-class ANetProjectCharacter : public ACharacter
+class ANetProjectCharacter : public ACharacter, public IAbilitySystemInterface
 {
 	GENERATED_BODY()
 
@@ -18,6 +21,10 @@ class ANetProjectCharacter : public ACharacter
 	/** Follow camera */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	class UCameraComponent* FollowCamera;
+
+	//Ability组件
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = GameplayAbilities, meta = (AllowPrivateAccess = "true"))
+	class UAbilitySystemComponent* AbilitySystem;
 public:
 	ANetProjectCharacter();
 
@@ -68,5 +75,15 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 	/** Returns FollowCamera subobject **/
 	FORCEINLINE class UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
+	UAbilitySystemComponent* GetAbilitySystemComponent() const { return AbilitySystem; }
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Abilities)
+	TArray<TSubclassOf<class UGameplayAbility> > MyAbilities;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = AttributeSets)
+	TArray<TSubclassOf<class UAttributeSet> > AttributeSets;
+
+	virtual void BeginPlay()override;
 };
 

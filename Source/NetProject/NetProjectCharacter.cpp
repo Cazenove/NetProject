@@ -43,12 +43,41 @@ ANetProjectCharacter::ANetProjectCharacter()
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
 
+	AbilitySystem = CreateDefaultSubobject<UAbilitySystemComponent>(TEXT("AbilitySystem"));
+
 	// Note: The skeletal mesh and anim blueprint references on the Mesh component (inherited from Character) 
 	// are set in the derived blueprint asset named MyCharacter (to avoid direct content references in C++)
 }
 
 //////////////////////////////////////////////////////////////////////////
 // Input
+
+void ANetProjectCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	if (AbilitySystem == nullptr) return;
+
+	//为角色绑定技能
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *FString("Char Beginplay 97"));
+	if (HasAuthority() && MyAbilities.Num())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString("Char Beginplay 99"));
+		for (auto i = 0; i < MyAbilities.Num(); i++)
+		{
+			if (MyAbilities[i] == nullptr)continue;
+			AbilitySystem->GiveAbility(FGameplayAbilitySpec(MyAbilities[i].GetDefaultObject(), 1, 0));
+			UE_LOG(LogTemp, Warning, TEXT("%s"), *FString("103bp we register an ability!"));
+		}
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *FString("All Abilities registered"));
+	}
+	AbilitySystem->InitAbilityActorInfo(this, this);
+	UE_LOG(LogTemp, Warning, TEXT("%s"), *FString("Char BeginPlay 105"));
+
+	for (TSubclassOf<class UAttributeSet>& Set : AttributeSets)
+	{
+		AbilitySystem->InitStats(Set, nullptr);
+	}
+}
 
 void ANetProjectCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent)
 {
@@ -74,6 +103,8 @@ void ANetProjectCharacter::SetupPlayerInputComponent(class UInputComponent* Play
 
 	// VR headset functionality
 	PlayerInputComponent->BindAction("ResetVR", IE_Pressed, this, &ANetProjectCharacter::OnResetVR);
+
+	//AbilitySystem->BindAbilityActivationToInputComponent(PlayerInputComponent, FGameplayAbilityInputBinds("ConfirmInput", "CancelInput", "AbilityInput"));
 }
 
 
